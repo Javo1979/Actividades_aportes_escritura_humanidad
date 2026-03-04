@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misión: El Legado de la Escritura - Edición Maestra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap');
+        
+        body { font-family: 'Montserrat', sans-serif; background-color: #f1f5f9; overflow-x: hidden; touch-action: manipulation; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .gradient-bg { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
+        .btn-action { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .btn-action:active { transform: scale(0.95); }
+        
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        #map-area {
+            background-color: #e0f2fe;
+            background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+            position: relative;
+            min-height: 400px;
+            border-radius: 1.5rem;
+            border: 2px solid #bae6fd;
+        }
+
+        .region-card {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .region-card:hover { transform: scale(1.05); z-index: 10; }
+
+        .word-chip { touch-action: none; user-select: none; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header UI -->
+    <header class="fixed top-0 w-full glass shadow-sm z-50 px-4 py-3 flex justify-between items-center border-b border-slate-200">
+        <div class="flex items-center gap-2">
+            <button onclick="speakText('Misión El Legado de la Escritura')" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 text-slate-600">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <h1 class="font-extrabold text-slate-800 tracking-tight uppercase text-xs md:text-sm">Guardián del Legado</h1>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div id="lives-container" class="flex gap-1">
+                <i class="fas fa-inkwell text-indigo-600 text-lg"></i>
+                <i class="fas fa-inkwell text-indigo-600 text-lg"></i>
+                <i class="fas fa-inkwell text-indigo-600 text-lg"></i>
+            </div>
+            <div class="bg-amber-100 px-3 py-1 rounded-full flex items-center gap-2 border border-amber-200">
+                <span id="score-display" class="font-bold text-amber-800 text-sm">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-20 pb-12 px-4 max-w-4xl mx-auto">
+
+        <!-- INTRODUCCIÓN -->
+        <section id="screen-intro" class="flex flex-col items-center text-center py-6">
+            <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                <i class="fas fa-feather-alt text-3xl text-indigo-600"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-4">El Archivo del Tiempo</h2>
+            <p class="text-slate-600 mb-8 leading-relaxed">
+                Bienvenido, Escriba. La historia de la humanidad está en riesgo. Debes superar 4 misiones para salvar el legado de la escritura. ¡Cuidado con tu tinta!
+            </p>
+            <div class="mb-8 w-full max-w-xs text-left">
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Tu Nombre para el Diploma:</label>
+                <input type="text" id="user-name" placeholder="Ej. Juan Pérez" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none transition-all">
+            </div>
+            <button onclick="startGame()" class="gradient-bg text-white px-12 py-4 rounded-2xl font-bold shadow-xl btn-action w-full sm:w-auto">
+                COMENZAR MISIÓN
+            </button>
+        </section>
+
+        <!-- MISIÓN 1: CLASIFICACIÓN -->
+        <section id="screen-level1" class="hidden">
+            <div class="mb-6">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-[10px]">Misión 1</span>
+                <h3 class="text-xl font-extrabold">Clasificación de Aportes</h3>
+                <p class="text-slate-500 text-sm mt-1">¿Qué nos dejó realmente la escritura? Selecciona los aportes correctos.</p>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8" id="level1-items"></div>
+            <div class="bg-slate-800 p-6 rounded-3xl border-2 border-slate-700 text-center">
+                <div id="storage-zone" class="flex flex-wrap justify-center gap-2 min-h-[60px]">
+                    <p class="text-slate-500 text-xs italic w-full">Baúl de conocimientos restaurados</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MISIÓN 2: MAPA MEJORADO -->
+        <section id="screen-level2" class="hidden">
+            <div class="mb-6">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-[10px]">Misión 2</span>
+                <h3 class="text-xl font-extrabold">Cunas de la Civilización</h3>
+                <p class="text-slate-600 mb-4 text-sm font-bold bg-indigo-50 p-4 rounded-xl border-l-4 border-indigo-400">
+                    <i class="fas fa-search mr-2"></i>Haz clic en la región donde se originó el aporte: <span id="current-target-name" class="text-indigo-700 underline">Cargando...</span>
+                </p>
+            </div>
+
+            <div id="map-area" class="shadow-inner relative overflow-hidden flex items-center justify-center">
+                <!-- Etiquetas de regiones claras -->
+                <div onclick="checkMap('egipto')" class="region-card bg-white p-3 rounded-xl shadow-lg border-2 border-blue-200" style="top: 50%; left: 40%;">
+                    <i class="fas fa-map-marker-alt text-blue-600 mb-1"></i>
+                    <p class="text-[10px] font-black uppercase">Egipto</p>
+                </div>
+                <div onclick="checkMap('mesopotamia')" class="region-card bg-white p-3 rounded-xl shadow-lg border-2 border-green-200" style="top: 35%; left: 55%;">
+                    <i class="fas fa-map-marker-alt text-green-600 mb-1"></i>
+                    <p class="text-[10px] font-black uppercase">Mesopotamia</p>
+                </div>
+                <div onclick="checkMap('china')" class="region-card bg-white p-3 rounded-xl shadow-lg border-2 border-red-200" style="top: 30%; left: 80%;">
+                    <i class="fas fa-map-marker-alt text-red-600 mb-1"></i>
+                    <p class="text-[10px] font-black uppercase">China</p>
+                </div>
+                
+                <p class="absolute bottom-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Mapa de las Antiguas Civilizaciones</p>
+            </div>
+        </section>
+
+        <!-- MISIÓN 3: LÍNEA DE TIEMPO -->
+        <section id="screen-level3" class="hidden">
+            <div class="mb-6 text-center">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-[10px]">Misión 3</span>
+                <h3 class="text-xl font-extrabold">El Orden del Progreso</h3>
+                <p class="text-slate-500 text-sm">Mueve las piezas para ordenar la historia (arriba lo más antiguo).</p>
+            </div>
+            <div class="max-w-md mx-auto space-y-3" id="timeline-container"></div>
+            <div class="text-center mt-8">
+                <button onclick="checkTimeline()" class="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold btn-action shadow-lg">VERIFICAR ORDEN</button>
+            </div>
+        </section>
+
+        <!-- MISIÓN 4: FRASE MAESTRA -->
+        <section id="screen-level4" class="hidden">
+            <div class="mb-6 text-center">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-[10px]">Misión Final</span>
+                <h3 class="text-xl font-extrabold">La Gran Verdad</h3>
+            </div>
+            <div class="bg-amber-50 p-6 rounded-3xl border-2 border-amber-100 shadow-inner">
+                <div id="word-pool" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+                <div id="sentence-zone" class="flex flex-wrap justify-center gap-2 p-6 bg-white rounded-2xl min-h-[80px] border-2 border-dashed border-indigo-100"></div>
+            </div>
+            <div class="text-center mt-8">
+                <button onclick="checkSentence()" class="gradient-bg text-white px-12 py-4 rounded-2xl font-bold btn-action">VALIDAR FRASE</button>
+            </div>
+        </section>
+
+        <!-- DIPLOMA FINAL -->
+        <section id="screen-final" class="hidden">
+            <div id="certificate" class="bg-white p-10 border-[16px] border-double border-indigo-900 rounded shadow-2xl text-center max-w-2xl mx-auto relative">
+                <h2 class="text-indigo-900 font-black text-3xl mb-1">DIPLOMA DE EXCELENCIA</h2>
+                <p class="text-slate-400 uppercase tracking-widest text-[10px] mb-8 font-bold">Guardián de la Historia Universal</p>
+                <p class="text-slate-500 text-sm mb-2">Otorgado con honor a:</p>
+                <h3 id="display-name" class="text-4xl font-serif font-bold text-slate-800 mb-8 italic border-b-2 border-slate-100 inline-block px-6">Estudiante</h3>
+                <p class="text-slate-600 leading-relaxed mb-8 text-sm">
+                    Por completar con éxito el desafío interactivo de los <strong>Aportes de la Escritura</strong>, demostrando ser un experto en la preservación del conocimiento humano.
+                </p>
+                <div class="flex justify-between items-center mt-12 px-6">
+                    <div class="text-left">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Puntaje Final</p>
+                        <p id="final-points" class="font-black text-indigo-600 text-xl">0 pts</p>
+                    </div>
+                    <div class="bg-yellow-400 w-16 h-16 rounded-full flex items-center justify-center shadow-lg border-4 border-white">
+                        <i class="fas fa-award text-white text-3xl"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold">Fecha</p>
+                        <p id="final-date" class="font-black text-indigo-600 text-sm">--/--/--</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-10">
+                <button onclick="location.reload()" class="bg-slate-200 text-slate-600 px-6 py-2 rounded-xl font-bold hover:bg-slate-300 transition-all">REPETIR EXPEDICIÓN</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Feedback -->
+    <div id="modal" class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl scale-in">
+            <div id="modal-icon" class="text-6xl mb-4"></div>
+            <h3 id="modal-title" class="text-2xl font-bold mb-2"></h3>
+            <p id="modal-text" class="text-slate-500 mb-8 text-sm leading-relaxed"></p>
+            <button id="modal-btn" class="w-full py-4 rounded-2xl font-bold text-white shadow-lg"></button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let lives = 3;
+        let userName = "Estudiante";
+        let mapTargets = [
+            { id: 'mesopotamia', name: 'Escritura Cuneiforme', info: "¡Correcto! En Mesopotamia (actual Irak) se grabaron los primeros símbolos en arcilla." },
+            { id: 'egipto', name: 'Papiro', info: "¡Excelente! Los egipcios usaron la planta del papiro para crear sus rollos de escritura." },
+            { id: 'china', name: 'Papel', info: "¡Exacto! China revolucionó el mundo con la invención del papel." }
+        ];
+        let currentTargetIdx = 0;
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'es-ES';
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score-display').innerText = score;
+            const container = document.getElementById('lives-container');
+            container.innerHTML = '';
+            for(let i=0; i<3; i++) {
+                container.innerHTML += `<i class="fas fa-inkwell ${i < lives ? 'text-indigo-600' : 'text-slate-300'} text-lg"></i>`;
+            }
+        }
+
+        function showFeedback(c) {
+            const m = document.getElementById('modal');
+            document.getElementById('modal-icon').innerHTML = c.icon;
+            document.getElementById('modal-title').innerText = c.title;
+            document.getElementById('modal-text').innerText = c.text;
+            const b = document.getElementById('modal-btn');
+            b.innerText = c.btnText;
+            b.className = `w-full py-4 rounded-2xl font-bold text-white shadow-lg ${c.success ? 'bg-indigo-600' : 'bg-red-500'}`;
+            m.classList.remove('hidden');
+            b.onclick = () => { m.classList.add('hidden'); if(c.next) c.next(); };
+            if(c.success) speakText(c.title + ". " + c.text);
+        }
+
+        function loseLife(msg) {
+            lives--;
+            updateUI();
+            if(lives <= 0) {
+                showFeedback({ success: false, icon: "💀", title: "Misión Fallida", text: "Te has quedado sin tinta histórica.", btnText: "Reiniciar", next: () => location.reload() });
+            } else {
+                showFeedback({ success: false, icon: "⚠️", title: "Cuidado", text: msg + " Pierdes un tintero.", btnText: "Continuar" });
+            }
+        }
+
+        function startGame() {
+            userName = document.getElementById('user-name').value || "Escriba Real";
+            document.getElementById('display-name').innerText = userName;
+            changeScreen('screen-intro', 'screen-level1');
+        }
+
+        function changeScreen(f, t) {
+            document.getElementById(f).classList.add('hidden');
+            document.getElementById(t).classList.remove('hidden');
+            if(t === 'screen-level1') initLevel1();
+            if(t === 'screen-level2') initLevel2();
+            if(t === 'screen-level3') initLevel3();
+            if(t === 'screen-level4') initLevel4();
+            if(t === 'screen-final') {
+                document.getElementById('final-points').innerText = score + " pts";
+                document.getElementById('final-date').innerText = new Date().toLocaleDateString();
+            }
+        }
+
+        // NIVEL 1: CLASIFICACIÓN
+        function initLevel1() {
+            const items = [
+                { t: "Leyes Fijas", c: true, i: "fa-balance-scale", f: "La escritura permitió que las leyes no cambien a capricho." },
+                { t: "Memoria Científica", c: true, i: "fa-microscope", f: "Gracias a los libros, los científicos no empezaban de cero." },
+                { t: "Contratos de Comercio", c: true, i: "fa-file-signature", f: "Hizo el intercambio de bienes seguro y registrable." },
+                { t: "Educación Masiva", c: true, i: "fa-book-reader", f: "La imprenta permitió que los libros llegaran a todos." },
+                { t: "Vuelos Espaciales", c: false, i: "fa-rocket" },
+                { t: "Magia Real", c: false, i: "fa-hat-wizard" }
+            ];
+            const container = document.getElementById('level1-items');
+            container.innerHTML = '';
+            let found = 0;
+            items.sort(() => Math.random() - 0.5).forEach(item => {
+                const d = document.createElement('div');
+                d.className = "bg-white p-4 rounded-2xl border border-slate-200 cursor-pointer text-center hover:bg-indigo-50 btn-action shadow-sm";
+                d.innerHTML = `<i class="fas ${item.i} text-2xl text-slate-400 mb-2"></i><p class="text-[10px] font-bold uppercase">${item.t}</p>`;
+                d.onclick = () => {
+                    if(item.c) {
+                        d.classList.add('opacity-0', 'pointer-events-none');
+                        const s = document.createElement('span');
+                        s.className = "bg-indigo-600 text-white px-3 py-1 rounded-full text-[9px] font-bold animate-bounce";
+                        s.innerText = item.t;
+                        document.getElementById('storage-zone').appendChild(s);
+                        score += 50; found++; updateUI();
+                        if(found === 4) {
+                            showFeedback({ success: true, icon: "✅", title: "Misión Cumplida", text: "Has recuperado los aportes sociales fundamentales.", btnText: "Ir al Mapa", next: () => changeScreen('screen-level1', 'screen-level2') });
+                        }
+                    } else {
+                        loseLife("Eso no es un aporte histórico de la escritura antigua.");
+                    }
+                };
+                container.appendChild(d);
+            });
+        }
+
+        // NIVEL 2: MAPA
+        function initLevel2() {
+            document.getElementById('current-target-name').innerText = mapTargets[currentTargetIdx].name;
+        }
+
+        function checkMap(id) {
+            if(id === mapTargets[currentTargetIdx].id) {
+                score += 100; updateUI();
+                showFeedback({
+                    success: true, icon: "📍", title: "¡Ubicado!",
+                    text: mapTargets[currentTargetIdx].info,
+                    btnText: "Siguiente Ubicación",
+                    next: () => {
+                        currentTargetIdx++;
+                        if(currentTargetIdx >= mapTargets.length) changeScreen('screen-level2', 'screen-level3');
+                        else initLevel2();
+                    }
+                });
+            } else {
+                loseLife("Esa región no fue la cuna del aporte mencionado.");
+            }
+        }
+
+        // NIVEL 3: CRONOLOGÍA
+        function initLevel3() {
+            const list = [
+                { t: "Pictogramas (Dibujos)", o: 0 },
+                { t: "Símbolos Cuneiformes", o: 1 },
+                { t: "El Alfabeto", o: 2 },
+                { t: "La Imprenta Moderna", o: 3 }
+            ];
+            const c = document.getElementById('timeline-container');
+            c.innerHTML = '';
+            list.sort(() => Math.random() - 0.5).forEach(item => {
+                const d = document.createElement('div');
+                d.className = "bg-white p-4 rounded-xl border-2 border-slate-200 flex justify-between items-center shadow-sm";
+                d.dataset.order = item.o;
+                d.innerHTML = `<span class="font-bold text-sm text-slate-700">${item.t}</span><div class="flex gap-2"><button onclick="move(this.parentNode.parentNode, -1)" class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fas fa-chevron-up"></i></button><button onclick="move(this.parentNode.parentNode, 1)" class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fas fa-chevron-down"></i></button></div>`;
+                c.appendChild(d);
+            });
+        }
+
+        function move(el, dir) {
+            if(dir === -1 && el.previousElementSibling) el.parentNode.insertBefore(el, el.previousElementSibling);
+            if(dir === 1 && el.nextElementSibling) el.parentNode.insertBefore(el.nextElementSibling, el);
+        }
+
+        function checkTimeline() {
+            const items = [...document.getElementById('timeline-container').children];
+            if(items.every((it, i) => parseInt(it.dataset.order) === i)) {
+                score += 150; updateUI();
+                showFeedback({ success: true, icon: "⏳", title: "Tiempo Restaurado", text: "La historia fluye correctamente de nuevo.", btnText: "Misión Final", next: () => changeScreen('screen-level3', 'screen-level4') });
+            } else {
+                loseLife("El orden no es correcto. Recuerda que los pictogramas son lo más primitivo.");
+            }
+        }
+
+        // NIVEL 4: FRASE
+        function initLevel4() {
+            const words = ["La", "imprenta", "llevó", "el", "conocimiento", "a", "manos", "del", "pueblo"];
+            const pool = document.getElementById('word-pool');
+            const zone = document.getElementById('sentence-zone');
+            pool.innerHTML = ''; zone.innerHTML = '';
+            words.sort(() => Math.random() - 0.5).forEach(w => {
+                const b = document.createElement('button');
+                b.className = "px-4 py-2 bg-white border border-slate-300 rounded-xl font-bold text-xs shadow-sm hover:bg-amber-50";
+                b.innerText = w;
+                b.onclick = () => { if(b.parentNode === pool) zone.appendChild(b); else pool.appendChild(b); };
+                pool.appendChild(b);
+            });
+        }
+
+        function checkSentence() {
+            const s = [...document.getElementById('sentence-zone').children].map(b => b.innerText).join(' ');
+            if(s === "La imprenta llevó el conocimiento a manos del pueblo") {
+                score += 300; updateUI();
+                showFeedback({ success: true, icon: "👑", title: "Misión Completada", text: "Has desbloqueado el mayor secreto de la escritura.", btnText: "Ver Diploma", next: () => changeScreen('screen-level4', 'screen-final') });
+            } else {
+                loseLife("La frase no es exacta. ¡Prueba otra combinación!");
+            }
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
